@@ -15,10 +15,19 @@ async function run(){
     try{
         await client.connect();
         const categoryCollection = client.db('lens-lab').collection('Categories');
+        const dslrCollection = client.db('lens-lab').collection('dslrCamera');
 
         app.get('/categories', async(req,res)=>{
             const query = {};
             const result = await categoryCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.get('/categories/:id', async(req,res)=>{
+          const id = req.params.id;
+          console.log(id);
+            const query = {categoriesId:id};
+            const result = await dslrCollection.find(query).toArray();
             res.send(result);
         })
 
