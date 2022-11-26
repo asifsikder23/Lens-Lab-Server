@@ -14,8 +14,24 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         await client.connect();
+        const usersCollection = client.db('lens-lab').collection('users');
         const categoryCollection = client.db('lens-lab').collection('Categories');
         const dslrCollection = client.db('lens-lab').collection('dslrCamera');
+
+
+        app.post('/users', async(req, res)=>{
+          const user = req.body;
+          console.log(user);
+          const result = await usersCollection.insertOne(user);
+          res.send(result);
+      })
+      app.get('/users', async(req,res)=>{
+        const query = {};
+        const result = await usersCollection.find(query).toArray();
+        res.send(result);
+    })
+
+        
 
         app.get('/categories', async(req,res)=>{
             const query = {};
