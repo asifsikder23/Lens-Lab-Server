@@ -46,6 +46,11 @@ async function run(){
             const result = await dslrCollection.find(query).toArray();
             res.send(result);
         })
+      app.post('/categories', async (req, res) => {
+        const query = req.body;
+        const result = await dslrCollection.insertOne(query);
+        res.send(result);
+    });
 
     }
     finally{
