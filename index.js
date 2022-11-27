@@ -134,9 +134,6 @@ async function run() {
       const result = await dslrCollection.insertOne(query);
       res.send(result);
     });
-
-
-
     app.get('/bookings', async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
@@ -163,6 +160,24 @@ async function run() {
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
   });
+
+  app.delete("/users/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      res.send({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
   } finally {
   }
 }
