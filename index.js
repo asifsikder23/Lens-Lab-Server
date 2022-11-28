@@ -42,6 +42,7 @@ async function run() {
     const dslrCollection = client.db("lens-lab").collection("dslrCamera");
     const bookingsCollection = client.db("lens-lab").collection("booking");
     const reportCollection = client.db("lens-lab").collection("report");
+    const advertiseCollection = client.db("lens-lab").collection("advertise");
 
     // jwt
     app.get("/jwt", async (req, res) => {
@@ -138,8 +139,8 @@ async function run() {
       res.send(result);
     });
     
-    app.get("/categories/:email", async (req, res) => {
-      const email = req.params.email;
+    app.get("/categories", async (req, res) => {
+      const email = req.query.email;
       console.log(email);
       const query = { email: email };
       const result = await dslrCollection.find(query).toArray();
@@ -151,10 +152,36 @@ async function run() {
       const result = await dslrCollection.insertOne(query);
       res.send(result);
     });
+
+    app.delete("/categories/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await dslrCollection.deleteOne(query);
+        res.send({
+          success: true,
+          data: result,
+        });
+      } catch (error) {
+        res.send({
+          success: false,
+          error: error.message,
+        });
+      }
+    });
+
+
+
     app.get('/bookings', async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const bookings = await bookingsCollection.find(query).toArray();
+      res.send(bookings);
+  });
+    app.get('/bookings/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const bookings = await bookingsCollection.findOne(query);
       res.send(bookings);
   });
 
@@ -195,6 +222,15 @@ async function run() {
       });
     }
   });
+
+  app.post("/advertise/:id", async (req, res) => {
+    const user = req.body;
+    console.log(user);
+    const result = await advertiseCollection.insertOne(user);
+    console.log(result);
+    res.send(result);
+  });
+
 
   app.post("/report", async (req, res) => {
     const query = req.body;
