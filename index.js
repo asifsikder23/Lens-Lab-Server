@@ -41,6 +41,7 @@ async function run() {
     const categoryCollection = client.db("lens-lab").collection("Categories");
     const dslrCollection = client.db("lens-lab").collection("dslrCamera");
     const bookingsCollection = client.db("lens-lab").collection("booking");
+    const reportCollection = client.db("lens-lab").collection("report");
 
     // jwt
     app.get("/jwt", async (req, res) => {
@@ -123,7 +124,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/categories", async (req, res) => {
+    app.get("/category", async (req, res) => {
       const query = {};
       const result = await categoryCollection.find(query).toArray();
       res.send(result);
@@ -133,6 +134,14 @@ async function run() {
       const id = req.params.id;
       console.log(id);
       const query = { categoriesId: id };
+      const result = await dslrCollection.find(query).toArray();
+      res.send(result);
+    });
+    
+    app.get("/categories/:email", async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      const query = { email: email };
       const result = await dslrCollection.find(query).toArray();
       res.send(result);
     });
@@ -169,11 +178,40 @@ async function run() {
       res.send(result);
   });
 
+
   app.delete("/users/:id", async (req, res) => {
     try {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await usersCollection.deleteOne(query);
+      res.send({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      res.send({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+  app.post("/report", async (req, res) => {
+    const query = req.body;
+    const result = await reportCollection.insertOne(query);
+    res.send(result);
+  });
+  app.get("/report", async (req, res) => {
+    const query = {};
+    const result = await reportCollection.find(query).toArray();
+    res.send(result);
+  });
+
+  app.delete("/report/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await reportCollection.deleteOne(query);
       res.send({
         success: true,
         data: result,
