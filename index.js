@@ -17,26 +17,9 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-function verifyJWT(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).send("unauthorized access");
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
-    if (err) {
-      return res.status(403).send({ message: "forbidden access" });
-    }
-    req.decoded = decoded;
-    next();
-  });
-}
-
 async function run() {
   try {
-    await client.connect();
+    
     const usersCollection = client.db("lens-lab").collection("users");
     const categoryCollection = client.db("lens-lab").collection("Categories");
     const dslrCollection = client.db("lens-lab").collection("dslrCamera");
@@ -138,7 +121,7 @@ async function run() {
       const result = await dslrCollection.find(query).toArray();
       res.send(result);
     });
-    
+
     app.get("/categories", async (req, res) => {
       const email = req.query.email;
       console.log(email);
@@ -170,96 +153,104 @@ async function run() {
       }
     });
 
-
-
-    app.get('/bookings', async (req, res) => {
+    app.get("/bookings", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
       const bookings = await bookingsCollection.find(query).toArray();
       res.send(bookings);
-  });
-    app.get('/bookings/:id', async (req, res) => {
+    });
+    app.get("/bookings/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const bookings = await bookingsCollection.findOne(query);
       res.send(bookings);
-  });
+    });
 
-  app.post('/bookings', async (req, res) => {
+    app.post("/bookings", async (req, res) => {
       const booking = req.body;
 
       const query = {
-          productName: booking.productName,
-          email: booking.email,
-          customerName: booking.customerName
-      }
+        productName: booking.productName,
+        email: booking.email,
+        customerName: booking.customerName,
+      };
       console.log(query);
       const alreadyBooked = await bookingsCollection.find(query).toArray();
 
       if (alreadyBooked.length > 0) {
-          const message = `You already have booked ${booking.productName}`
-          return res.send({ acknowledged: false, message })
+        const message = `You already have booked ${booking.productName}`;
+        return res.send({ acknowledged: false, message });
       }
 
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
-  });
+    });
 
+    app.delete("/users/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await usersCollection.deleteOne(query);
+        res.send({
+          success: true,
+          data: result,
+        });
+      } catch (error) {
+        res.send({
+          success: false,
+          error: error.message,
+        });
+      }
+    });
 
-  app.delete("/users/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const result = await usersCollection.deleteOne(query);
-      res.send({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      res.send({
-        success: false,
-        error: error.message,
-      });
-    }
-  });
+    app.post("/advertise", async (req, res) => {
+      const advertised = req.body;
+      const query = {
+        _id: advertised._id,
+      };
+      console.log(query);
+      const alreadyBooked = await advertiseCollection.find(query).toArray();
+      if (alreadyBooked.length > 0) {
+        const message = `You already have advertised ${advertised.name}`;
+        return res.send({ acknowledged: false, message });
+      }
+      const result = await advertiseCollection.insertOne(advertised);
+      res.send(result);
+    });
 
-  app.post("/advertise/:id", async (req, res) => {
-    const user = req.body;
-    console.log(user);
-    const result = await advertiseCollection.insertOne(user);
-    console.log(result);
-    res.send(result);
-  });
+    app.get("/advertise", async (req, res) => {
+      const query = {};
+      const result = await advertiseCollection.find(query).toArray();
+      res.send(result);
+    });
 
+    app.post("/report", async (req, res) => {
+      const query = req.body;
+      const result = await reportCollection.insertOne(query);
+      res.send(result);
+    });
+    app.get("/report", async (req, res) => {
+      const query = {};
+      const result = await reportCollection.find(query).toArray();
+      res.send(result);
+    });
 
-  app.post("/report", async (req, res) => {
-    const query = req.body;
-    const result = await reportCollection.insertOne(query);
-    res.send(result);
-  });
-  app.get("/report", async (req, res) => {
-    const query = {};
-    const result = await reportCollection.find(query).toArray();
-    res.send(result);
-  });
-
-  app.delete("/report/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const result = await reportCollection.deleteOne(query);
-      res.send({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      res.send({
-        success: false,
-        error: error.message,
-      });
-    }
-  });
-
+    app.delete("/report/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await reportCollection.deleteOne(query);
+        res.send({
+          success: true,
+          data: result,
+        });
+      } catch (error) {
+        res.send({
+          success: false,
+          error: error.message,
+        });
+      }
+    });
   } finally {
   }
 }
